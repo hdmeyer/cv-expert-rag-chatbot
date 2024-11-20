@@ -452,3 +452,81 @@ streamlit run app_7.py
 Now upload a PDF document (the more the merrier) that is relevant to you and start asking questions about it. You'll see that the answers will be relevant, meaningful and contextual! 🥳 See the magic happen!
 
 ![end-result](./assets/end-result.png)
+
+
+
+## 1️⃣1️⃣ Lets create a chatbot that can advise you on how to improve your CV for specific positions! 🦄
+
+Based on the app_7.py we created the cv_experts_bot.py, which allows you to upload position descriptions that get inserted into the vector database.
+
+We first modified the prompt to allow to include not only the context but also the CV content:
+
+```python
+@st.cache_data()
+def load_prompt():
+    template = """
+    You are a curriculum advisor that is specialized in the field of product management, technical writing, fund acquisition and food science. 
+    You advise people on how to improve their CVs and what to include in them. Use the provided context as the basis for your 
+    answers and do not make up new reasoning paths just mix-and-match what you are given. You should focus on the context given 
+    for a position and the CV provided. You provide in-depth suggestions to change the uploaded CV to match the position description mentioned in the 
+    question of the user. 
+
+    CONTEXT: {context}
+
+    CV: {cv}
+    """
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", template),
+            ("human", "QUESTION: {question}"),
+        ]
+    )
+```
+We added an extra form to allow uploading your cv, without storing it in the 
+vector store, and to use it only during the session. 
+
+
+
+```python
+# Include the cv content in the session
+if 'cv_content' not in st.session_state:
+    st.session_state.cv_content = "default"
+
+...
+
+with st.form('upload_cv'):
+        uploaded_cv = st.file_uploader('Upload your CV to get recommendations. ', type=['pdf'])
+        submitted_cv = st.form_submit_button('Upload CV')
+        if submitted_cv:
+            st.session_state.cv_content = process_file(uploaded_cv)
+            st.info(f"CV loaded.")
+
+```
+
+We also changed the RunnableMap to also include the cv as part of the inputs:
+
+```python
+inputs = RunnableMap({
+        'context': lambda x: retriever.get_relevant_documents(x['question']),
+        'cv': lambda x: value,
+        'question': lambda x: x['question']
+    })
+```
+
+Now we need a function to load the PDF and ingest it into DataStax Enterprise while vectorizing the content.
+
+Check out the complete code in [cv_expert_bot.py](./cv_expert_bot.py).
+
+To get this application started locally you'll need to install the PyPDF dependency as follows (which should already be done as part of the prerequisites):
+```bash
+pip install pypdf
+```
+
+And run the app:
+```bash
+streamlit run cv_expert_bot.py
+```
+
+Now upload a PDF documents that you want to include as positions that you would like to get recommendations for, and upload your CV to check against the specific positions that you aim for. Bear in mind that if you would like to get recommendations for different positions, you might need to adjust the prompt and ask the question using the title of the position for the one you need the recommendations. 
+
+![end-result](./assets/end_result_cv_expert.png)
