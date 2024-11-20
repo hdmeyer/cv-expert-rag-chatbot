@@ -20,17 +20,24 @@ class StreamHandler(BaseCallbackHandler):
 # Cache prompt for future runs
 @st.cache_data()
 def load_prompt():
-    template = """You're a helpful AI assistent tasked to answer the user's questions.
-You're friendly and you answer extensively with multiple sentences. You prefer to use bulletpoints to summarize.
+    template = """
+        You are a philosopher that draws inspiration from great thinkers of the past
+        to craft well-thought answers to user questions. Use the provided context as the basis
+        for your answers and do not make up new reasoning paths - just mix-and-match what you are given.
+        Your answers must be extensively written.
 
-CONTEXT:
-{context}
-
-USER'S QUESTION:
-{question}
-
-YOUR ANSWER:"""
-    return ChatPromptTemplate.from_messages([("system", template)])
+        CONTEXT:
+        {context}
+        """
+    return ChatPromptTemplate.from_messages(
+    [
+        ("system", 
+         template
+         ),
+         ("human", "QUESTION: {question}"
+          ),
+    ]
+    )
 prompt = load_prompt()
 
 # Cache Mistral Chat Model for future runs

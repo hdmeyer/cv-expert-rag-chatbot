@@ -1,8 +1,8 @@
 import streamlit as st
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.chat_models.ollama import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain.schema.runnable import RunnableMap
 from langchain.prompts import ChatPromptTemplate
+
 
 # Cache prompt for future runs
 @st.cache_data()
@@ -10,11 +10,13 @@ def load_prompt():
     template = """You're a helpful AI assistent tasked to answer the user's questions.
 You're friendly and you answer extensively with multiple sentences. You prefer to use bulletpoints to summarize.
 
-USER'S QUESTION:
-{question}
-
-YOUR ANSWER:"""
-    return ChatPromptTemplate.from_messages([("system", template)])
+"""
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", template),
+            ("human", "QUESTION: {question}")
+         ]
+        )
 prompt = load_prompt()
 
 # Cache Mistral Chat Model for future runs
@@ -24,7 +26,7 @@ def load_chat_model():
     # num_ctx is the context window size
     return ChatOllama(
         model="mistral:latest", 
-        num_ctx=18192, 
+        num_ctx=4096, 
         base_url=st.secrets['OLLAMA_ENDPOINT']
     )
 chat_model = load_chat_model()

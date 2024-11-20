@@ -1,6 +1,19 @@
-# pip3 install -r requirements.txt
-streamlit
+streamlit==1.40.1
 watchdog
-ragstack-ai
-sentence-transformers
-pypdf
+ragstack-ai==1.1.0
+ragstack-ai-colbert==1.0.6
+ragstack-ai-langchain==1.4.0
+ragstack-ai-llamaindex==1.0.8
+sentence-transformers==3.2.1
+pypdf==4.3.1
+langchain==0.2.10
+langchain-astradb==0.3.3
+langchain-community==0.2.9
+langchain-core==0.2.22
+langchain-google-genai==1.0.6
+langchain-google-vertexai==1.0.5
+langchain-nvidia-ai-endpoints==0.1.1
+langchain-ollama==0.1.1
+langchain-openai==0.1.8
+langchain-text-splitters==0.2.2
+llama-index-embeddings-langchain==0.1.2

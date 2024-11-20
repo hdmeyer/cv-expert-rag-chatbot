@@ -9,17 +9,21 @@ from langchain.prompts import ChatPromptTemplate
 # Cache prompt for future runs
 @st.cache_data()
 def load_prompt():
-    template = """You're a helpful AI assistent tasked to answer the user's question.
-You're friendly and you answer extensively with multiple sentences. You prefer to use bulletpoints to summarize.
+    template = """
+        You are a philosopher that draws inspiration from great thinkers of the past
+        to craft well-thought answers to user questions. Use the provided context as the basis
+        for your answers and do not make up new reasoning paths - just mix-and-match what you are given.
+        Your answers must be extensively written.
 
-CONTEXT:
-{context}
-
-USER'S QUESTION:
-{question}
-
-YOUR ANSWER:"""
-    return ChatPromptTemplate.from_messages([("system", template)])
+        CONTEXT:
+        {context}
+        """
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", template),
+            ("human", "QUESTION: {question}"),
+        ]
+    )
 prompt = load_prompt()
 
 # Cache Mistral Chat Model for future runs
@@ -29,7 +33,7 @@ def load_chat_model():
     # num_ctx is the context window size
     return ChatOllama(
         model="mistral:latest", 
-        num_ctx=18192, 
+        num_ctx=4096, 
         base_url=st.secrets['OLLAMA_ENDPOINT']
     )
 chat_model = load_chat_model()
@@ -68,7 +72,8 @@ if 'messages' not in st.session_state:
     st.session_state.messages = []
 
 # Draw a title and some markdown
-st.markdown("""# Your Enterprise Co-Pilot 🚀
+st.markdown("""
+# Your Enterprise Co-Pilot 🚀
 Generative AI is considered to bring the next Industrial Revolution.  
 Why? Studies show a **37% efficiency boost** in day to day work activities!
 
@@ -78,7 +83,8 @@ This Chatbot is safe to work with sensitive data. Why?
 - On top of the inference engine, we're running [Mistral, a local and open Large Language Model (LLM)](https://mistral.ai/);
 - Also the LLM does not contain any sensitive or enterprise data, as there is no way to secure it in a LLM;
 - Instead, your sensitive data is stored securely within the firewall inside [DataStax Enterprise v7 Vector Database](https://www.datastax.com/blog/get-started-with-the-datastax-enterprise-7-0-developer-vector-search-preview);
-- And lastly, the chains are built on [RAGStack](https://www.datastax.com/products/ragstack), an enterprise version of Langchain and LLamaIndex, supported by [DataStax](https://www.datastax.com/).""")
+- And lastly, the chains are built on [RAGStack](https://www.datastax.com/products/ragstack), an enterprise version of Langchain and LLamaIndex, supported by [DataStax](https://www.datastax.com/).
+""")
 st.divider()
 
 # Draw all messages, both user and bot so far (every time the app reruns)
@@ -97,9 +103,9 @@ if question := st.chat_input("What's up?"):
 
     # Generate the answer by calling Mistral's Chat Model
     inputs = RunnableMap({
-        'context': lambda x: retriever.get_relevant_documents(x['question']),
-        'question': lambda x: x['question']
-    })
+  'context': lambda x: retriever.get_relevant_documents(x['question']),
+  'question': lambda x: x['question']
+})
     chain = inputs | prompt | chat_model
     response = chain.invoke({'question': question})
     answer = response.content
